@@ -1,6 +1,6 @@
-from sqlalchemy import create_engine, Column, Integer, Text
+from sqlalchemy import create_engine, Column, Integer, Text, Boolean, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, relationship
 from contextlib import contextmanager
 
 
@@ -24,16 +24,8 @@ def session_scope():
         session.close()
 
 
-class Project(Base):
-    __tablename__ = 'project'
-    project_id = Column(Integer, primary_key=True)
-    name = Column(Text)
 
 
-
-class StatusUpdate(Base):
-    __tablename__ = 'status_update'
-    status_update_id = Column(Integer, primary_key=True)
 
 
 class User(Base):
@@ -41,6 +33,8 @@ class User(Base):
     user_id = Column(Integer, primary_key=True)
     name = Column(Text)
     mention_name = Column(Text)
+
+    projects = relationship("Project")
 
     @classmethod
     def get_or_create(cls, user_id, name, mention_name):
@@ -64,4 +58,17 @@ class User(Base):
 
     def __eq__(self, other):
         return other.user_id == self.user_id
+
+
+class Project(Base):
+    __tablename__ = 'project'
+    project_id = Column(Integer, primary_key=True)
+    name = Column(Text)
+    active = Column(Boolean)
+    user_id = Column(Integer, ForeignKey('user.user_id'))
+
+
+class StatusUpdate(Base):
+    __tablename__ = 'status_update'
+    status_update_id = Column(Integer, primary_key=True)
 

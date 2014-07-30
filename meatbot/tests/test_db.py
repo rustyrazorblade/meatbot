@@ -4,8 +4,12 @@ from meatbot.status import User, Project, StatusUpdate
 
 from random import randint
 
-rint = lambda: randint(0, 100000000)
 
+rint = lambda: randint(0, 100000000) # random int
+
+def mkuser():
+    i = rint()
+    return User.get_or_create(i, "test", "test" + str(i))
 
 def test_get_user():
     i = rint()
@@ -18,3 +22,7 @@ def test_get_user():
 
     small_pete = User.get(i)
     assert small_pete.mention_name == "smallpete"
+
+
+def test_mk_project():
+    user = mkuser()
