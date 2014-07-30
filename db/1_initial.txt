@@ -1,0 +1,25 @@
+create table "user" (
+    user_id int primary key,
+    name text,
+    mention_name text
+);
+
+
+create table project (
+project_id serial primary key,
+name text,
+active bool,
+user_id int references "user" (user_id)
+);
+
+
+create index on project (user_id);
+
+create table status_update (
+status_update_id serial primary key,
+project_id int references "project" (project_id),
+message text,
+created_at timestamp default current_timestamp
+);
+
+create index on status_update (status_update_id);
