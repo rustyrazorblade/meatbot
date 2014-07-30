@@ -1,0 +1,9 @@
+Open projects for {{user.mention_name}}:
+
+<ul>
+    {% for project in projects %}
+    <li>{{ project.name }}</li>
+    {% endfor %}
+</ul>
+<br>
+Done.

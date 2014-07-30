@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, Text, Boolean, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, Text, Boolean, ForeignKey, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from contextlib import contextmanager
@@ -52,12 +52,18 @@ class User(Base):
         with session_scope() as session:
             return session.query(User).filter(User.user_id==user_id).first()
 
+    @classmethod
+    def get_by_nick(cls, nick):
+        with session_scope() as s:
+            return s.query(User).filter(User.mention_name==nick).first()
 
     def __eq__(self, other):
         return other.user_id == self.user_id
 
 
-class ProjectAlreadyExistsException(Exception): pass
+class ProjectAlreadyExistsException(Exception):
+    def __init__(self, project_id):
+        self.project_id = project_id
 
 class Project(Base):
     __tablename__ = 'project'
@@ -77,7 +83,42 @@ class Project(Base):
             s.add(p)
         return p
 
+    @classmethod
+    def get_by_user(cls, user):
+        with session_scope() as s:
+            return s.query(Project).filter(Project.user_id==user.user_id).all()
+
+    @classmethod
+    def get_by_user_and_name(cls, user, name):
+        with session_scope() as s:
+            return s.query(Project).filter(Project.user_id == user.user_id).filter(Project.name==name).first()
+
+
 class StatusUpdate(Base):
     __tablename__ = 'status_update'
     status_update_id = Column(Integer, primary_key=True)
+    project_id = Column(Integer, ForeignKey('project.project_id'))
+    message = Column(Text)
+    created_at = Column(DateTime)
 
+    @classmethod
+    def create(cls, project_id, message):
+        with session_scope() as s:
+            status = StatusUpdate(project_id=project_id, message=message)
+            s.add(status)
+
+        return status
+
+    def __str__(self):
+        return "<StatusUpdate status_update_id=%d project_id=%d message=%s>" % (self.status_update_id, self.project_id, self.message)
+
+
+    @classmethod
+    def get_updates(cls, user=None, since=None):
+        if since is None:
+            # set to 1 day ago
+            pass
+        with session_scope() as s:
+            tmp = s.query(StatusUpdate)
+
+            return tmp.all()
