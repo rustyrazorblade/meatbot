@@ -39,15 +39,28 @@ class StatusUpdate(Base):
 class User(Base):
     __tablename__ = 'user'
     user_id = Column(Integer, primary_key=True)
+    name = Column(Text)
+    mention_name = Column(Text)
 
     @classmethod
-    def get_or_create(cls, user_id):
+    def get_or_create(cls, user_id, name, mention_name):
         with session_scope() as session:
             user = session.query(User).filter(User.user_id==user_id).first()
-            if not user:
-                user = User(user_id=user_id)
+            if user:
+                if user.name != name or user.mention_name != mention_name:
+                    user.name = name
+                    user.mention_name = mention_name
+                    session.add(user)
+            else:
+                user = User(user_id=user_id, name=name, mention_name=mention_name)
                 session.add(user)
         return user
+
+    @classmethod
+    def get(cls, user_id):
+        with session_scope() as session:
+            return session.query(User).filter(User.user_id==user_id).first()
+
 
     def __eq__(self, other):
         return other.user_id == self.user_id

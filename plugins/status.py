@@ -26,8 +26,9 @@ class StatusPlugin(WillPlugin, HipChatMixin):
         hipchat_user = self.get_hipchat_user(user_id)
 
         # available on hipchat_user
-        user = User.get_or_create(hipchat_user['id'])
-
+        user = User.get_or_create(hipchat_user['id'],
+                                  hipchat_user['name'],
+                                  hipchat_user['mention_name'])
 
         pprint(hipchat_user)
 
