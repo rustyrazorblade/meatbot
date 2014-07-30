@@ -25,9 +25,6 @@ def session_scope():
 
 
 
-
-
-
 class User(Base):
     __tablename__ = 'user'
     user_id = Column(Integer, primary_key=True)
@@ -60,6 +57,8 @@ class User(Base):
         return other.user_id == self.user_id
 
 
+class ProjectAlreadyExistsException(Exception): pass
+
 class Project(Base):
     __tablename__ = 'project'
     project_id = Column(Integer, primary_key=True)
@@ -67,6 +66,16 @@ class Project(Base):
     active = Column(Boolean)
     user_id = Column(Integer, ForeignKey('user.user_id'))
 
+    @classmethod
+    def create(cls, user_id, name):
+        with session_scope() as s:
+            existing = s.query(Project).filter(Project.user_id==user_id).filter(Project.name == name).first()
+            print existing
+            if existing:
+                raise ProjectAlreadyExistsException()
+            p = Project(user_id=user_id, name=name)
+            s.add(p)
+        return p
 
 class StatusUpdate(Base):
     __tablename__ = 'status_update'

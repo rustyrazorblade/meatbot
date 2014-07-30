@@ -6,7 +6,7 @@ from will.decorators import respond_to
 from pprint import pprint
 
 
-from meatbot.status import User, Project, StatusUpdate
+from meatbot.status import User, Project, StatusUpdate, ProjectAlreadyExistsException
 
 
 def dump(obj):
@@ -18,7 +18,6 @@ class StatusPlugin(WillPlugin):
     def get_user(self, message):
         assert isinstance(message, Message)
         user = message.sender
-        print type(user)
         # user_id = user.user.split("_")[1]
         # hipchat_user = self.get_hipchat_user(user_id)
 
@@ -31,7 +30,16 @@ class StatusPlugin(WillPlugin):
     @respond_to("mkproject (?P<project_name>.*)")
     def mkproject(self, message, project_name):
         user = self.get_user(message)
-        self.reply(message, "Project %s created for you, %s" % (project_name, user.mention_name))
+        try:
+            Project.create(user.user_id, project_name)
+            self.reply(message, "Project %s created for you, %s" % (project_name, user.mention_name))
+        except ProjectAlreadyExistsException as e:
+            self.reply(message, "Sorry, but that project already exists")
+
+    @respond_to("lsproject (?P<nick>)?")
+    def lsproject(self, nick):
+        pass
+
 
     @respond_to("test")
     def test(self, message):
