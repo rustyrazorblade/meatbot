@@ -114,11 +114,14 @@ class StatusUpdate(Base):
 
 
     @classmethod
-    def get_updates(cls, user=None, since=None):
+    def get_updates(cls, user=None, project=None, since=None):
         if since is None:
             # set to 1 day ago
             pass
+
         with session_scope() as s:
-            tmp = s.query(StatusUpdate)
+            tmp = s.query(StatusUpdate, Project).join(Project)
+            if user:
+                tmp = tmp.filter(Project.user_id==user.user_id)
 
             return tmp.all()

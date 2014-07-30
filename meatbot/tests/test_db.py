@@ -18,7 +18,7 @@ def mkprojects(user, num=3):
     tmp = []
 
     for x in range(num):
-        Project.create(user.user_id, str(uuid.uuid4()))
+        tmp.append(Project.create(user.user_id, str(uuid.uuid4())))
 
     return tmp
 
@@ -54,8 +54,15 @@ def test_mk_project():
 def test_get_updates():
     u1 = mkuser()
     u2 = mkuser()
-    projects1 = mkprojects(u1, 2)
-    projects2 = mkprojects(u2, 2)
+    project1 = mkprojects(u1, 1)[0]
+    project2 = mkprojects(u2, 1)[0]
+
+    populate_project(project1)
+    populate_project(project2)
+
+    updates = StatusUpdate.get_updates(u1)
+
+    assert len(updates) == 3, len(updates)
 
 
 
