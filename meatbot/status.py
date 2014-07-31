@@ -83,10 +83,9 @@ class Project(Model):
 
 
 
-
 class StatusUpdate(Model):
     # status updates are per project
-    project_id = UUID(primary_key=True)
+    project_name = Text(primary_key=True)
     update_id = TimeUUID(primary_key=True, clustering_order='DESC', default=uuid.uuid1)
     user_id = Integer(required=True)
     message = Text()
@@ -94,7 +93,7 @@ class StatusUpdate(Model):
 
     @classmethod
     def create(cls, project, message):
-        return super(StatusUpdate, cls).create(project_id=project.project_id,
+        return super(StatusUpdate, cls).create(project_name=project.name,
                                                user_id=project.user_id,
                                                message=message)
 

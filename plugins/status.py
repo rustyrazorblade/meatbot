@@ -50,18 +50,10 @@ class StatusPlugin(WillPlugin):
             self.reply(message, "Could not find user %s" % nick)
             return
 
-        projects = Project.get_by_user(user)
+        projects = Project.objects(user_id=user.user_id)
 
         template = rendered_template("lsproject.html", {"user":user, "projects":projects})
         self.reply(message, template, html=True)
-
-
-    @respond_to("test")
-    def test(self, message):
-        connect()
-        print message.sender
-        user = self.get_user(message)
-        self.reply(message, "got it")
 
 
     @respond_to("update (?P<project_name>.+?) (?P<status>.+)")
@@ -69,15 +61,23 @@ class StatusPlugin(WillPlugin):
         connect()
         # insert into postgres
         user = self.get_user(message)
-        project = Project.get_by_user_and_name(user, project_name)
 
-        if not project:
+        try:
+            project = Project.get(user_id=user.user_id, name=project_name)
+        except Project.DoesNotExist:
             self.reply(message, "Sorry, project %s not found." % project_name)
             return
 
-        status = StatusUpdate.create(project.project_id, status)
+        status = StatusUpdate.create(project, status)
 
         self.reply(message, "Status updated." + str(status))
+
+    @respond_to("help")
+    def help(self, message):
+        help_text = rendered_template("status_help.html", {})
+        self.reply(message, help_text, html=True)
+
+
 
     @respond_to("^wtf ?(?P<nick>.*)")
     def show_updates(self, message, nick):
