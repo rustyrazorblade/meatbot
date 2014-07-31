@@ -1,127 +1,86 @@
-from sqlalchemy import create_engine, Column, Integer, Text, Boolean, ForeignKey, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
-from contextlib import contextmanager
+import uuid
+from cqlengine.connection import setup
+from cqlengine.management import sync_table, create_keyspace
+from cqlengine import Model, UUID, Text, TimeUUID, DateTime, Integer
+
+setup(["localhost"], "meatbot")
 
 
-engine = create_engine("postgresql://jhaddad:@localhost/meatbot")
-Base = declarative_base()
-
-Session = sessionmaker(bind=engine, expire_on_commit=False)
-
-
-@contextmanager
-def session_scope():
-    """Provide a transactional scope around a series of operations."""
-    session = Session()
-    try:
-        yield session
-        session.commit()
-    except:
-        session.rollback()
-        raise
-    finally:
-        session.close()
-
-
-
-class User(Base):
-    __tablename__ = 'user'
-    user_id = Column(Integer, primary_key=True)
-    name = Column(Text)
-    mention_name = Column(Text)
-
-    projects = relationship("Project")
+class User(Model):
+    user_id = Integer(primary_key=True)
+    name = Text()
+    mention_name = Text()
 
     @classmethod
     def get_or_create(cls, user_id, name, mention_name):
-        with session_scope() as session:
-            user = session.query(User).filter(User.user_id==user_id).first()
-            if user:
-                if user.name != name or user.mention_name != mention_name:
-                    user.name = name
-                    user.mention_name = mention_name
-                    session.add(user)
-            else:
-                user = User(user_id=user_id, name=name, mention_name=mention_name)
-                session.add(user)
+        try:
+            user = User.get(user_id)
+        except:
+            user = User.create(user_id=user_id,
+                        name=name,
+                        mention_name=mention_name)
         return user
 
     @classmethod
-    def get(cls, user_id):
-        with session_scope() as session:
-            return session.query(User).filter(User.user_id==user_id).first()
-
-    @classmethod
     def get_by_nick(cls, nick):
-        with session_scope() as s:
-            return s.query(User).filter(User.mention_name==nick).first()
+        for user in User.objects():
+            if user.mention_name == nick:
+                return user
+
+        raise User.DoesNotExist
 
     def __eq__(self, other):
         return other.user_id == self.user_id
+
+sync_table(User)
+
 
 
 class ProjectAlreadyExistsException(Exception):
     def __init__(self, project_id):
         self.project_id = project_id
 
-class Project(Base):
-    __tablename__ = 'project'
-    project_id = Column(Integer, primary_key=True)
-    name = Column(Text)
-    active = Column(Boolean)
-    user_id = Column(Integer, ForeignKey('user.user_id'))
+class Project(Model):
+    user_id = Integer(primary_key=True)
+    project_id = TimeUUID(primary_key=True, clustering_order='DESC', default=uuid.uuid1)
+    name = Text()
 
     @classmethod
-    def create(cls, user_id, name):
-        with session_scope() as s:
-            existing = s.query(Project).filter(Project.user_id==user_id).filter(Project.name == name).first()
-            print existing
-            if existing:
-                raise ProjectAlreadyExistsException()
-            p = Project(user_id=user_id, name=name)
-            s.add(p)
-        return p
+    def create(cls, user, name):
+        try:
+            p = Project.get_by_name(user, name)
+        except:
+            project = super(Project, cls).create(user_id=user.user_id, name=name)
+        return project
+
+sync_table(Project)
+
+
+class StatusUpdate(Model):
+    # status updates are per project
+    project_id = UUID(primary_key=True)
+    update_id = TimeUUID(primary_key=True, clustering_order='DESC', default=uuid.uuid1)
+    user_id = Integer(required=True)
+    message = Text()
+    created_at = DateTime()
 
     @classmethod
-    def get_by_user(cls, user):
-        with session_scope() as s:
-            return s.query(Project).filter(Project.user_id==user.user_id).all()
-
-    @classmethod
-    def get_by_user_and_name(cls, user, name):
-        with session_scope() as s:
-            return s.query(Project).filter(Project.user_id == user.user_id).filter(Project.name==name).first()
-
-
-class StatusUpdate(Base):
-    __tablename__ = 'status_update'
-    status_update_id = Column(Integer, primary_key=True)
-    project_id = Column(Integer, ForeignKey('project.project_id'))
-    message = Column(Text)
-    created_at = Column(DateTime)
-
-    @classmethod
-    def create(cls, project_id, message):
-        with session_scope() as s:
-            status = StatusUpdate(project_id=project_id, message=message)
-            s.add(status)
-
-        return status
-
-    def __str__(self):
-        return "<StatusUpdate status_update_id=%d project_id=%d message=%s>" % (self.status_update_id, self.project_id, self.message)
-
+    def create(cls, project, message):
+        return super(StatusUpdate, cls).create(project_id=project.project_id,
+                                               user_id=project.user_id,
+                                               message=message)
 
     @classmethod
     def get_updates(cls, user=None, project=None, since=None):
-        if since is None:
-            # set to 1 day ago
+        if not user:
+            # all the users!
+            users = User.objects()
+            for user in users:
+                # get each project
             pass
+        return []
 
-        with session_scope() as s:
-            tmp = s.query(StatusUpdate, Project).join(Project)
-            if user:
-                tmp = tmp.filter(Project.user_id==user.user_id)
 
-            return tmp.all()
+sync_table(StatusUpdate)
+
+

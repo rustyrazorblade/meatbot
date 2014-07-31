@@ -18,13 +18,13 @@ def mkprojects(user, num=3):
     tmp = []
 
     for x in range(num):
-        tmp.append(Project.create(user.user_id, str(uuid.uuid4())))
+        tmp.append(Project.create(user, str(uuid.uuid4())))
 
     return tmp
 
 def populate_project(project, items=3):
     for x in range(items):
-        StatusUpdate.create(project.project_id, "test")
+        StatusUpdate.create(project, "test")
 
 
 
@@ -39,7 +39,7 @@ def test_get_user():
     user2 = User.get_or_create(i, "pete", sp)
     assert user == user2
 
-    small_pete = User.get(i)
+    small_pete = User.get(user_id=i)
     assert small_pete.mention_name == sp
 
     pete = User.get_by_nick(sp)
@@ -54,6 +54,8 @@ def test_mk_project():
 def test_get_updates():
     u1 = mkuser()
     u2 = mkuser()
+
+    # 1 project per user
     project1 = mkprojects(u1, 1)[0]
     project2 = mkprojects(u2, 1)[0]
 
@@ -65,5 +67,10 @@ def test_get_updates():
     assert len(updates) == 3, len(updates)
 
 
+    project3 = mkprojects(u1, 1)[0]
+
+    updates = StatusUpdate.get_updates(u1)
+
+    assert len(updates) == 3, len(updates)
 
 
