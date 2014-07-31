@@ -81,6 +81,7 @@ class StatusPlugin(WillPlugin):
 
     @respond_to("^wtf ?(?P<nick>.*)")
     def show_updates(self, message, nick):
+        # shows updates for a single user
         connect()
         if not nick:
             self.reply(message, "YOU")
@@ -93,6 +94,6 @@ class StatusPlugin(WillPlugin):
 
 
 class CuredMeats(WillPlugin):
-    @respond_to("bacon")
+    @respond_to("^bacon")
     def bacon(self):
         self.say("<img src='http://upload.wikimedia.org/wikipedia/commons/3/31/Made20bacon.png'>", html=True)

@@ -52,7 +52,7 @@ class User(Model):
 
 import re
 
-name_regex = re.compile("^[a-zA-Z0-9]$")
+name_regex = re.compile("^[a-zA-Z0-9]+$")
 
 
 class ProjectAlreadyExistsException(Exception): pass
