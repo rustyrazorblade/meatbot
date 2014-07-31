@@ -1,10 +1,22 @@
+from gevent.monkey import patch_all
+
 import uuid
 from cqlengine.connection import setup
-from cqlengine.management import sync_table, create_keyspace
+from cqlengine.management import sync_table
 from cqlengine import Model, UUID, Text, TimeUUID, DateTime, Integer
 
-setup(["localhost"], "meatbot")
+import logging
+logging.basicConfig()
 
+
+def connect():
+    print "Connecting"
+    setup(["localhost"], "meatbot")
+    print "Connected"
+    sync_table(User)
+    sync_table(Project)
+    sync_table(StatusUpdate)
+    print "Done Syncing"
 
 
 class User(Model):
@@ -33,7 +45,6 @@ class User(Model):
     def __eq__(self, other):
         return other.user_id == self.user_id
 
-sync_table(User)
 
 
 
@@ -54,7 +65,6 @@ class Project(Model):
             project = super(Project, cls).create(user_id=user.user_id, name=name)
         return project
 
-sync_table(Project)
 
 
 class StatusUpdate(Model):
@@ -82,6 +92,5 @@ class StatusUpdate(Model):
         return []
 
 
-sync_table(StatusUpdate)
 
 

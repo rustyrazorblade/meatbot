@@ -1,12 +1,8 @@
 from sleekxmpp import Message
-from will.mixins import HipChatMixin
 from will.plugin import WillPlugin
 from will.decorators import respond_to, rendered_template
 
-from pprint import pprint
-
-
-from meatbot.status import User, Project, StatusUpdate, ProjectAlreadyExistsException
+from meatbot.status import User, Project, StatusUpdate, ProjectAlreadyExistsException, connect
 
 
 def dump(obj):
@@ -14,7 +10,6 @@ def dump(obj):
         print "%s:%s" % (x, getattr(obj, x))
 
 class StatusPlugin(WillPlugin):
-
     def get_user(self, message):
         assert isinstance(message, Message)
         user = message.sender
@@ -58,8 +53,10 @@ class StatusPlugin(WillPlugin):
 
     @respond_to("test")
     def test(self, message):
+        connect()
         print message.sender
         user = self.get_user(message)
+        self.reply(message, "got it")
 
 
     @respond_to("update (?P<project_name>.+?) (?P<status>.+)")
@@ -86,12 +83,6 @@ class StatusPlugin(WillPlugin):
         template = rendered_template("show_updates.html", {})
         self.reply(message, template, html=True)
 
-
-"""
-session.query(User).filter(User.user_id == user_id)
-
-
-"""
 
 class CuredMeats(WillPlugin):
     @respond_to("bacon")
