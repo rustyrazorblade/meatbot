@@ -6,6 +6,7 @@ from cqlengine import Model, UUID, Text, TimeUUID, DateTime, Integer
 setup(["localhost"], "meatbot")
 
 
+
 class User(Model):
     user_id = Integer(primary_key=True)
     name = Text()
@@ -77,7 +78,7 @@ class StatusUpdate(Model):
             users = User.objects()
             for user in users:
                 # get each project
-            pass
+                pass
         return []
 
 
