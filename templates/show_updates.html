@@ -1,3 +1,7 @@
-{% for user in updates %}
+Updates for {{ user.mention_name }} <BR>
 
+{% for update in updates %}
+    <li>{{update.project}} {{update.message}}</li>
 {% endfor %}
+
+

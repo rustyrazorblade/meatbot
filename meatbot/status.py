@@ -1,6 +1,7 @@
 from gevent.monkey import patch_all
 
 import uuid
+from datetime import datetime
 from cqlengine.connection import setup
 from cqlengine.management import sync_table
 from cqlengine import Model, UUID, Text, TimeUUID, DateTime, Integer
@@ -10,6 +11,7 @@ logging.basicConfig()
 
 connected = False
 
+
 def connect():
     if connected: return
     print "Connecting"
@@ -18,6 +20,7 @@ def connect():
     sync_table(User)
     sync_table(Project)
     sync_table(StatusUpdate)
+    sync_table(StatusUpdateUserAggregated)
     print "Done Syncing"
     global connected
     connected = True
@@ -89,13 +92,20 @@ class StatusUpdate(Model):
     update_id = TimeUUID(primary_key=True, clustering_order='DESC', default=uuid.uuid1)
     user_id = Integer(required=True)
     message = Text()
-    created_at = DateTime()
+    created_at = DateTime(default=datetime.now)
 
     @classmethod
     def create(cls, project, message):
-        return super(StatusUpdate, cls).create(project_name=project.name,
+        tmp = super(StatusUpdate, cls).create(project_name=project.name,
                                                user_id=project.user_id,
                                                message=message)
+
+        StatusUpdateUserAggregated.create(user_id=project.user_id,
+                                   update_id=tmp.update_id,
+                                   message=message,
+                                   project=project.name,
+                                   created_at=tmp.created_at)
+        return tmp
 
     @classmethod
     def get_updates(cls, user=None, project=None, since=None):
@@ -107,6 +117,11 @@ class StatusUpdate(Model):
                 pass
         return []
 
-
+class StatusUpdateUserAggregated(Model):
+    user_id = Integer(primary_key=True)
+    update_id = TimeUUID(primary_key=True, clustering_order='DESC')
+    project = Text(required=True)
+    message = Text(required=True)
+    created_at = DateTime(required=True)
 
 

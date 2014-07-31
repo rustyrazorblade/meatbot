@@ -2,7 +2,8 @@ from sleekxmpp import Message
 from will.plugin import WillPlugin
 from will.decorators import respond_to, rendered_template
 
-from meatbot.status import User, Project, StatusUpdate, ProjectAlreadyExistsException, connect, InvalidNameException
+from meatbot.status import User, Project, StatusUpdate, ProjectAlreadyExistsException, connect, InvalidNameException, \
+    StatusUpdateUserAggregated
 
 
 def dump(obj):
@@ -83,13 +84,28 @@ class StatusPlugin(WillPlugin):
     def show_updates(self, message, nick):
         # shows updates for a single user
         connect()
-        if not nick:
-            self.reply(message, "YOU")
-        else:
-            self.reply(message, nick)
+        try:
+            if not nick:
+                user = self.get_user(message)
+            else:
+                user = User.get_by_nick(nick)
+        except User.DoesNotExist:
+            self.reply(message, "%s does not exist yet." % nick)
+            return
 
-        template = rendered_template("show_updates.html", {})
+
+        updates = StatusUpdateUserAggregated.objects(user_id=user.user_id).limit(10)
+
+        template = rendered_template("show_updates.html",
+                                     {"user":user, "updates":updates})
+
         self.reply(message, template, html=True)
+
+
+    @respond_to("^(derp|huh|meat)$")
+    def summary_view(self, message):
+        pass
+
 
 
 
