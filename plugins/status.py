@@ -2,7 +2,7 @@ from sleekxmpp import Message
 from will.plugin import WillPlugin
 from will.decorators import respond_to, rendered_template
 
-from meatbot.status import User, Project, StatusUpdate, ProjectAlreadyExistsException, connect
+from meatbot.status import User, Project, StatusUpdate, ProjectAlreadyExistsException, connect, InvalidNameException
 
 
 def dump(obj):
@@ -10,7 +10,10 @@ def dump(obj):
         print "%s:%s" % (x, getattr(obj, x))
 
 class StatusPlugin(WillPlugin):
+
+
     def get_user(self, message):
+        connect()
         assert isinstance(message, Message)
         user = message.sender
         # user_id = user.user.split("_")[1]
@@ -26,15 +29,17 @@ class StatusPlugin(WillPlugin):
     def mkproject(self, message, project_name):
         user = self.get_user(message)
         try:
-            Project.create(user.user_id, project_name)
+            Project.create(user, project_name)
             self.reply(message, "Project %s created for you, %s" % (project_name, user.mention_name))
         except ProjectAlreadyExistsException as e:
-            self.reply(message, "Sorry, but that project already exists (id=%d)")
+            self.reply(message, "Sorry, but that project already exists under your name.")
+        except InvalidNameException:
+            self.reply(message, "Sorry, just letters and numbers (no spaces).")
 
     @respond_to("lsp(?P<nick> .*)?")
     def lsproject(self, message, nick):
         # lists all projects, current user is assumed
-
+        connect()
         if nick:
             nick = nick.strip()
             user = User.get_by_nick(nick)
@@ -61,6 +66,7 @@ class StatusPlugin(WillPlugin):
 
     @respond_to("update (?P<project_name>.+?) (?P<status>.+)")
     def update_status(self, message, project_name, status):
+        connect()
         # insert into postgres
         user = self.get_user(message)
         project = Project.get_by_user_and_name(user, project_name)
@@ -75,6 +81,7 @@ class StatusPlugin(WillPlugin):
 
     @respond_to("^wtf ?(?P<nick>.*)")
     def show_updates(self, message, nick):
+        connect()
         if not nick:
             self.reply(message, "YOU")
         else:
@@ -82,6 +89,7 @@ class StatusPlugin(WillPlugin):
 
         template = rendered_template("show_updates.html", {})
         self.reply(message, template, html=True)
+
 
 
 class CuredMeats(WillPlugin):

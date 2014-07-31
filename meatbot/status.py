@@ -8,8 +8,10 @@ from cqlengine import Model, UUID, Text, TimeUUID, DateTime, Integer
 import logging
 logging.basicConfig()
 
+connected = False
 
 def connect():
+    if connected: return
     print "Connecting"
     setup(["localhost"], "meatbot")
     print "Connected"
@@ -17,6 +19,8 @@ def connect():
     sync_table(Project)
     sync_table(StatusUpdate)
     print "Done Syncing"
+    global connected
+    connected = True
 
 
 class User(Model):
@@ -46,24 +50,37 @@ class User(Model):
         return other.user_id == self.user_id
 
 
+import re
+
+name_regex = re.compile("^[a-zA-Z0-9]$")
 
 
-class ProjectAlreadyExistsException(Exception):
-    def __init__(self, project_id):
-        self.project_id = project_id
+class ProjectAlreadyExistsException(Exception): pass
+class InvalidNameException(Exception): pass
 
 class Project(Model):
     user_id = Integer(primary_key=True)
-    project_id = TimeUUID(primary_key=True, clustering_order='DESC', default=uuid.uuid1)
-    name = Text()
+    name = Text(primary_key=True)
 
     @classmethod
     def create(cls, user, name):
+        name = name.strip()
+        if not name_regex.match(name):
+            raise InvalidNameException()
+
         try:
             p = Project.get_by_name(user, name)
-        except:
+            raise ProjectAlreadyExistsException()
+        except Project.DoesNotExist:
             project = super(Project, cls).create(user_id=user.user_id, name=name)
-        return project
+            return project
+
+    @classmethod
+    def get_by_name(cls, user, name):
+        name = name.strip()
+        return Project.get(user_id=user.user_id, name=name)
+
+
 
 
 
