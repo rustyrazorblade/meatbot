@@ -108,7 +108,7 @@ class StatusPlugin(WillPlugin):
         result = []
 
         for user in User.objects():
-            updates = StatusUpdateUserAggregated.objects(user_id=user.user_id).limit(10)
+            updates = StatusUpdateUserAggregated.objects(user_id=user.user_id).limit(5)
 
             template = rendered_template("show_updates.html",
                                          {"user":user, "updates":updates})
