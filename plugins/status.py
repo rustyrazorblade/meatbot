@@ -104,7 +104,18 @@ class StatusPlugin(WillPlugin):
 
     @respond_to("^(derp|huh|meat)$")
     def summary_view(self, message):
-        pass
+        connect()
+        result = []
+
+        for user in User.objects():
+            updates = StatusUpdateUserAggregated.objects(user_id=user.user_id).limit(10)
+
+            template = rendered_template("show_updates.html",
+                                         {"user":user, "updates":updates})
+            result.append(template)
+
+        response = "<BR>".join(result)
+        self.reply(message, response, html=True)
 
 
 
