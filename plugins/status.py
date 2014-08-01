@@ -112,13 +112,7 @@ class StatusPlugin(WillPlugin):
 
             template = rendered_template("show_updates.html",
                                          {"user":user, "updates":updates})
-            result.append(template)
-
-        response = "<BR>".join(result)
-        self.reply(message, response, html=True)
-
-
-
+            self.reply(message, template, html=True)
 
 class CuredMeats(WillPlugin):
     @respond_to("^bacon")
