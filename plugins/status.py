@@ -109,6 +109,8 @@ class StatusPlugin(WillPlugin):
 
         for user in User.objects():
             updates = StatusUpdateUserAggregated.objects(user_id=user.user_id).limit(5)
+            if not len(updates):
+                continue
 
             template = rendered_template("show_updates.html",
                                          {"user":user, "updates":updates})

@@ -55,7 +55,7 @@ class User(Model):
 
 import re
 
-name_regex = re.compile("^[a-zA-Z0-9]+$")
+name_regex = re.compile("^[a-zA-Z0-9\-\_]+$")
 
 
 class ProjectAlreadyExistsException(Exception): pass
