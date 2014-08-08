@@ -116,6 +116,12 @@ class StatusPlugin(WillPlugin):
                                          {"user":user, "updates":updates})
             self.reply(message, template, html=True)
 
+    @respond_to("^rmproject (?P<project_name>.*)$")
+    def remove_project(self, message, project_name):
+        user = self.get_user(message)
+        Project.objects(user_id=user.user_id, name=project_name).delete()
+        self.reply(message, "Project %s deleted." % project_name)
+
 class CuredMeats(WillPlugin):
     @respond_to("^bacon")
     def bacon(self):

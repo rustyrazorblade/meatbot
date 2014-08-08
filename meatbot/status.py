@@ -5,6 +5,7 @@ from datetime import datetime
 from cqlengine.connection import setup
 from cqlengine.management import sync_table
 from cqlengine import Model, UUID, Text, TimeUUID, DateTime, Integer
+import humanize
 
 import logging
 logging.basicConfig()
@@ -94,6 +95,10 @@ class StatusUpdate(Model):
     message = Text()
     created_at = DateTime(default=datetime.now)
 
+    @property
+    def human_time(self):
+        return humanize.naturaltime(self.created_at)
+
     @classmethod
     def create(cls, project, message):
         tmp = super(StatusUpdate, cls).create(project_name=project.name,
@@ -125,3 +130,6 @@ class StatusUpdateUserAggregated(Model):
     created_at = DateTime(required=True)
 
 
+    @property
+    def human_time(self):
+        return humanize.naturaltime(self.created_at)

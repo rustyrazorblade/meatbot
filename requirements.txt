@@ -2,4 +2,4 @@ will
 cqlengine
 nose
 ipdb
-
+humanize
