@@ -3,3 +3,4 @@ cqlengine
 nose
 ipdb
 humanize
+cassandra-driver==2.1.1
