@@ -73,7 +73,7 @@ class StatusPlugin(WillPlugin):
 
         self.reply(message, "Status updated." + str(status))
 
-    @respond_to("help")
+    @respond_to("^help$")
     def help(self, message):
         help_text = rendered_template("status_help.html", {})
         self.reply(message, help_text, html=True)
