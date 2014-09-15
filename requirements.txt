@@ -1,4 +1,4 @@
-will
+will==0.5.7
 cqlengine
 nose
 ipdb
