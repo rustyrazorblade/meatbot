@@ -16,7 +16,7 @@ class HangoutPlugin(WillPlugin):
             room = random.choice(tmp_room_name_parts) +  "-" + random.choice(tmp_room_name_parts) + str(random.randint(1, 100))
 
 
-        url = "https://plus.google.com/hangouts/_/datastax.com/%s?authuser=1" % room
+        url = "https://plus.google.com/hangouts/_/datastax.com/%s" % room
 
         self.reply(message, "Here's a hangout (%s): %s" % (room, url))
 
