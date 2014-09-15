@@ -86,7 +86,7 @@ HTTPSERVER_PORT = "9005"
 # ------------------------------------------------------------------------------------
 
 # The list of rooms will should join.  Default is all rooms.
-ROOMS = ['Evangelists', "Community Team"]
+ROOMS = ['Evangelists', "Community Team", "training" ]
 
 
 # The room will will talk to if the trigger is a webhook and he isn't told a specific room.
